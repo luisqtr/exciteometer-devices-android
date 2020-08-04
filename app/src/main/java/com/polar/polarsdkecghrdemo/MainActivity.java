@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -16,7 +17,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import java.io.IOException;
 
 import edu.ucsd.sccn.LSL;
 
@@ -27,12 +31,77 @@ public class MainActivity extends AppCompatActivity {
     private String DEVICE_ID;
     SharedPreferences sharedPreferences;
 
+    // LSL
+    private static TextView tv;
+
+    void showMessage(String string) {
+        final String finalString = string;
+        runOnUiThread(new Runnable(){
+            @Override
+            public void run(){
+                tv.setText(finalString);
+            }
+        });
+    }
+
+    private String markertypes[] = { "Test", "Blah", "Marker", "XXX", "Testtest", "Test-1-2-3" };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         sharedPreferences = this.getPreferences(Context.MODE_PRIVATE);
         checkBT();
+
+        // LSL
+        tv = (TextView) findViewById(R.id.textViewLSL);
+        showMessage( "Attempting to send LSL markers: ");
+
+
+        AsyncTask.execute(new Runnable() {
+            public void run() {
+                System.out.println(LSL.local_clock());
+                java.util.Random rand = new java.util.Random();
+                showMessage("Creating a new StreamInfo...");
+                LSL.StreamInfo info = new LSL.StreamInfo("MyMarkers","Markers",1,LSL.IRREGULAR_RATE,LSL.ChannelFormat.string,"myuid4563");
+
+                showMessage("Creating an outlet...");
+                LSL.StreamOutlet outlet = null;
+                try {
+                    outlet = new LSL.StreamOutlet(info);
+                } catch(IOException ex) {
+                    showMessage("Unable to open LSL outlet. Have you added <uses-permission android:name=\"android.permission.INTERNET\" /> to your manifest file?");
+                    return;
+                }
+
+                // send random marker strings
+                while (true) {
+                    try{
+
+                        final String mrk = markertypes[Math.abs(rand.nextInt()) % markertypes.length];
+                        runOnUiThread(new Runnable(){
+                            @Override
+                            public void run(){
+                                showMessage("Now sending: " + mrk);
+                            }
+                        });
+                        String[] sample = new String[1];
+                        sample[0] = mrk;
+                        outlet.push_sample(sample);
+
+                        Thread.sleep(1000);
+                    } catch (Exception ex) {
+                        showMessage(ex.getMessage());
+                        outlet.close();
+                        info.destroy();
+                    }
+
+                }
+
+
+            }
+        });
+
     }
 
     public void onClickConnect(View view) {
