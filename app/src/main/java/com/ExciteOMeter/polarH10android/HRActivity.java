@@ -1,6 +1,7 @@
 package com.ExciteOMeter.polarH10android;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -13,6 +14,7 @@ import com.androidplot.xy.StepMode;
 import com.androidplot.xy.XYGraphWidget;
 import com.androidplot.xy.XYPlot;
 
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.UUID;
@@ -24,6 +26,8 @@ import polar.com.sdk.api.PolarBleApiDefaultImpl;
 import polar.com.sdk.api.model.PolarDeviceInfo;
 import polar.com.sdk.api.model.PolarHrData;
 import polar.com.sdk.api.errors.PolarInvalidArgument;
+
+import edu.ucsd.sccn.LSL;
 
 public class HRActivity extends AppCompatActivity implements PlotterListener {
 
@@ -37,6 +41,80 @@ public class HRActivity extends AppCompatActivity implements PlotterListener {
     private Context classContext = this;
     private String DEVICE_ID;
 
+    // LSL
+    private static TextView tv;
+
+    //// Outlet Heart Rate
+    final String LSL_OUTLET_NAME_HR = "HeartRate";
+    final String LSL_OUTLET_TYPE_HR = "ExciteOMeter";
+    final int LSL_OUTLET_CHANNELS_HR = 1;
+    final double LSL_OUTLET_NOMINAL_RATE_HR = LSL.IRREGULAR_RATE;
+    final int LSL_OUTLET_CHANNEL_FORMAT_HR = LSL.ChannelFormat.int16;
+    LSL.StreamInfo info_HR = null;
+    LSL.StreamOutlet outlet_HR = null;
+    int[] samples_HR = new int[1];
+
+    //// Outlet R-R interval
+    final String LSL_OUTLET_NAME_RR = "RRinterval";
+    final String LSL_OUTLET_TYPE_RR = "ExciteOMeter";
+    final int LSL_OUTLET_CHANNELS_RR = 1;
+    final double LSL_OUTLET_NOMINAL_RATE_RR = LSL.IRREGULAR_RATE;
+    final int LSL_OUTLET_CHANNEL_FORMAT_RR = LSL.ChannelFormat.float32;
+    LSL.StreamInfo info_RR = null;
+    LSL.StreamOutlet outlet_RR = null;
+    float[] samples_RR = new float[1];
+
+    // LSL Callbacks
+    void showMessage(String string) {
+        final String finalString = string;
+        runOnUiThread(new Runnable(){
+            @Override
+            public void run(){
+                tv.setText(finalString);
+            }
+        });
+    }
+
+    void sendDataHR(int data) {
+        try{
+            /*final String dataString = Integer.toString(data);
+            runOnUiThread(new Runnable(){
+                @Override
+                public void run(){
+                    showMessage("Now sending HR: " + dataString);
+                }
+            });*/
+            samples_HR[0] = data;
+            outlet_HR.push_sample(samples_HR);
+
+            //Thread.sleep(5);
+        } catch (Exception ex) {
+            showMessage(ex.getMessage());
+            outlet_HR.close();
+            info_HR.destroy();
+        }
+    }
+
+    void sendDataRR(float data) {
+        try{
+/*            final String dataString = Float.toString(data);
+            runOnUiThread(new Runnable(){
+                @Override
+                public void run(){
+                    showMessage("Now sending RR: " + dataString);
+                }
+            });*/
+            samples_RR[0] = data;
+            outlet_RR.push_sample(samples_RR);
+
+            //Thread.sleep(5);
+        } catch (Exception ex) {
+            showMessage(ex.getMessage());
+            outlet_RR.close();
+            info_RR.destroy();
+        }
+    }
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,6 +125,54 @@ public class HRActivity extends AppCompatActivity implements PlotterListener {
 
         plot = findViewById(R.id.plot2);
 
+        // LSL
+        tv = (TextView) findViewById(R.id.textViewLSL);
+        showMessage( "Attempting to send LSL markers: ");
+        System.out.println(LSL.local_clock());
+
+        AsyncTask.execute(new Runnable() {
+            public void run() {
+                // configure HR
+                showMessage("Creating a new StreamInfo HR...");
+                info_HR = new LSL.StreamInfo(LSL_OUTLET_NAME_HR,
+                                            LSL_OUTLET_TYPE_HR,
+                                            LSL_OUTLET_CHANNELS_HR,
+                                            LSL_OUTLET_NOMINAL_RATE_HR,
+                                            LSL_OUTLET_CHANNEL_FORMAT_HR,
+                                            DEVICE_ID);
+
+                showMessage("Creating an outlet HR...");
+                try {
+                    outlet_HR = new LSL.StreamOutlet(info_HR);
+                } catch(IOException ex) {
+                    showMessage("Unable to open LSL outlet. Have you added <uses-permission android:name=\"android.permission.INTERNET\" /> to your manifest file?");
+                    return;
+                }
+            }
+        });
+
+        AsyncTask.execute(new Runnable() {
+            public void run() {
+                // configure RR
+                showMessage("Creating a new StreamInfo RR...");
+                info_RR = new LSL.StreamInfo(LSL_OUTLET_NAME_RR,
+                        LSL_OUTLET_TYPE_RR,
+                        LSL_OUTLET_CHANNELS_RR,
+                        LSL_OUTLET_NOMINAL_RATE_RR,
+                        LSL_OUTLET_CHANNEL_FORMAT_RR,
+                        DEVICE_ID);
+
+                showMessage("Creating an outlet RR...");
+                try {
+                    outlet_RR = new LSL.StreamOutlet(info_RR);
+                } catch(IOException ex) {
+                    showMessage("Unable to open LSL outlet. Have you added <uses-permission android:name=\"android.permission.INTERNET\" /> to your manifest file?");
+                    return;
+                }
+            }
+        });
+
+        // API
         api = PolarBleApiDefaultImpl.defaultImplementation(this,
                 PolarBleApi.FEATURE_BATTERY_INFO |
                         PolarBleApi.FEATURE_DEVICE_INFO |
@@ -126,9 +252,15 @@ public class HRActivity extends AppCompatActivity implements PlotterListener {
             public void hrNotificationReceived(String s,
                                                PolarHrData polarHrData) {
                 Log.d(TAG, "HR " + polarHrData.hr);
+
+                // LSL Send Data
+                sendDataHR(polarHrData.hr);
+
                 List<Integer> rrsMs = polarHrData.rrsMs;
                 String msg = String.valueOf(polarHrData.hr) + "\n";
                 for (int i : rrsMs) {
+                    // LSL Send Data
+                    sendDataRR( (float) i);
                     msg += i + ",";
                 }
                 if (msg.endsWith(",")) {
@@ -172,6 +304,12 @@ public class HRActivity extends AppCompatActivity implements PlotterListener {
     public void onDestroy() {
         super.onDestroy();
         api.shutDown();
+
+        outlet_RR.close();
+        info_RR.destroy();
+
+        outlet_HR.close();
+        info_HR.destroy();
     }
 
     public void update() {

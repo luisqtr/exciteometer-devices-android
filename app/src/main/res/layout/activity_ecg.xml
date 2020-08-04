@@ -58,4 +58,12 @@
         app:renderMode="use_background_thread"
         app:title="" />
 
+    <TextView
+        android:id="@+id/textViewLSL"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="TextView"
+        tools:layout_editor_absoluteX="17dp"
+        tools:layout_editor_absoluteY="14dp" />
+
 </android.support.constraint.ConstraintLayout>
