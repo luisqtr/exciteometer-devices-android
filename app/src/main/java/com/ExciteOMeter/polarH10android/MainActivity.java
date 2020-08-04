@@ -20,8 +20,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.IOException;
-
 import edu.ucsd.sccn.LSL;
 
 public class MainActivity extends AppCompatActivity {
@@ -54,8 +52,8 @@ public class MainActivity extends AppCompatActivity {
 
         // LSL
         tv = (TextView) findViewById(R.id.textViewLSL);
-        showMessage( "All data is automatically sent through the network with LSL");
-
+        showMessage( "Data is received automatically in Excite-O-Meter Clients.");
+        System.out.println(LSL.local_clock());
     }
 
     public void onClickConnect(View view) {

@@ -165,6 +165,7 @@ public class HRActivity extends AppCompatActivity implements PlotterListener {
                 showMessage("Creating an outlet RR...");
                 try {
                     outlet_RR = new LSL.StreamOutlet(info_RR);
+                    showMessage("Sending data through LSL...");
                 } catch(IOException ex) {
                     showMessage("Unable to open LSL outlet. Have you added <uses-permission android:name=\"android.permission.INTERNET\" /> to your manifest file?");
                     return;

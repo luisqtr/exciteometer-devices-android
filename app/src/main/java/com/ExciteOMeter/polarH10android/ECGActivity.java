@@ -127,6 +127,7 @@ public class ECGActivity extends AppCompatActivity implements PlotterListener {
                 showMessage("Creating an outlet...");
                 try {
                     outlet_ECG = new LSL.StreamOutlet(info_ECG);
+                    showMessage("Sending data through LSL...");
                 } catch(IOException ex) {
                     showMessage("Unable to open LSL outlet. Have you added <uses-permission android:name=\"android.permission.INTERNET\" /> to your manifest file?");
                     return;
