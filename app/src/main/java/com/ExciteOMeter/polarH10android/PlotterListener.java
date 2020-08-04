@@ -1,4 +1,4 @@
-package com.polar.polarsdkecghrdemo;
+package com.ExciteOMeter.polarH10android;
 
 public interface PlotterListener{
     void update();

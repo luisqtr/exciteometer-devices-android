@@ -3,7 +3,7 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 28
     defaultConfig {
-        applicationId "com.polar.polarsdkdemo"
+        applicationId "com.ExciteOMeter.polarH10demo"
         minSdkVersion 23
         targetSdkVersion 26
         versionCode 1
@@ -20,7 +20,7 @@ android {
 
 task copySdk {
     copy {
-        from("$projectDir/../../../../polar-sdk-android/libs")
+        from("$projectDir/../../../../ExciteOMeter-sdk-android/libs")
         into("$projectDir/libs")
         include '*.aar'
     }

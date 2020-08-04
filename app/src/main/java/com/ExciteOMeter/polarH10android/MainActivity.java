@@ -1,4 +1,4 @@
-package com.polar.polarsdkecghrdemo;
+package com.ExciteOMeter.polarH10android;
 
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;

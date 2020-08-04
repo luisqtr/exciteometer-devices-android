@@ -1,4 +1,4 @@
-package com.polar.polarsdkecghrdemo;
+package com.ExciteOMeter.polarH10android;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -14,7 +14,6 @@ import com.androidplot.xy.XYPlot;
 
 import org.reactivestreams.Publisher;
 
-import java.util.List;
 import java.util.UUID;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
