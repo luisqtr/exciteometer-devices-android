@@ -1,7 +1,6 @@
 package com.polar.polarsdkecghrdemo;
 
 import android.Manifest;
-import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -19,6 +18,7 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import edu.ucsd.sccn.LSL;
 
 public class MainActivity extends AppCompatActivity {
 
