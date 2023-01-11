@@ -1097,6 +1097,7 @@ public class LSL {
     static {
         System.setProperty("jna.debug_load", "true");
         System.setProperty("jna.debug_load.jna", "true");
+        System.out.println("PLATFORM GETOSTYPE: HERE>>>>> " + Platform.getOSType());
         switch (Platform.getOSType()) {
             case Platform.WINDOWS:
                 inst = (dll) Native.load((Platform.is64Bit() ? "liblsl64.dll" : "liblsl32.dll"), dll.class);
